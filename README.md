@@ -8,6 +8,10 @@ For all projects we used a Raspberry Pi Pico W board.
 
 For this projects I am using the VScode with the extesion Raspberry Pi Pico on Linux system (Ubuntu 24.04).
 
+### Raspberry Pi Pico W
+
+![Raspberry-Pi-Pico-W](/imgs/picow-pinout.svg)
+
 ## How to use the Raspberry Pi Pico on VScode 
 
 The following steps will help you to setup the development environment on VScode, build and flash the project to the Raspberry Pi Pico.
@@ -86,8 +90,10 @@ On the project folder, run the following command to build the project.
 mkdir build
 cd build
 cmake ..
-make -j$(nproc)
+make 
 ```
+
+You could use ```make -j$(nproc)``` rather than ```make``` to build using all CPU cores in parallel.
 
 ### Flash 
 
@@ -111,9 +117,15 @@ sudo apt install picocom
 picocom -b 115200 /dev/ttyACM0
 ```
 
-## Projects [UnderDevelopment]
+## Projects 
 
-* 001 - Blink
+| Project | Description | Status |
+| ------- | ----------- | ------ |
+| [Blink](/Projects/cpp/001-Blink/) | Simple blink using GPIOs  | Done |
+| [Interruption](/Projects/cpp/002-Interruption/) | Timer and GPIO interruption | Done |
+| [ADC](/Projects/cpp/003-ADC/) | Analog to Digital converter | Done |
+| [PWM](/Projects/cpp/004-PWM/) | Pulse Width Modulation | Done |
+
 
 
 ## References
@@ -121,3 +133,7 @@ picocom -b 115200 /dev/ttyACM0
 * [Pico Microcontroller boards](https://www.raspberrypi.com/documentation/microcontrollers/pico-series.html)
 
 * [Raspberry Pi Pico pinout Diagram](https://pico.pinout.xyz/)
+
+* [RP2040 Datasheet - A microcontroller by Raspberry Pi](https://pip-assets.raspberrypi.com/categories/814-rp2040/documents/RP-008371-DS-1-rp2040-datasheet.pdf)
+
+* [Pico C SDK examples](https://www.raspberrypi.com/documentation/pico-sdk/examples_page.html#examples_page)
