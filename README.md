@@ -137,3 +137,5 @@ picocom -b 115200 /dev/ttyACM0
 * [RP2040 Datasheet - A microcontroller by Raspberry Pi](https://pip-assets.raspberrypi.com/categories/814-rp2040/documents/RP-008371-DS-1-rp2040-datasheet.pdf)
 
 * [Pico C SDK examples](https://www.raspberrypi.com/documentation/pico-sdk/examples_page.html#examples_page)
+
+* [BMP280 - Digital Pressure Sensor](https://cdn-shop.adafruit.com/datasheets/BST-BMP280-DS001-11.pdf)
