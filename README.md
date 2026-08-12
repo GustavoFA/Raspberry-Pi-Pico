@@ -125,7 +125,8 @@ picocom -b 115200 /dev/ttyACM0
 | [Interruption](/Projects/cpp/002-Interruption/) | Timer and GPIO interruption | Done |
 | [ADC](/Projects/cpp/003-ADC/) | Analog to Digital converter | Done |
 | [PWM](/Projects/cpp/004-PWM/) | Pulse Width Modulation | Done |
-| [I2C](/Projects/cpp/005-I2C/) | Inter-Integrated Circuit protocol with BMP280 | Done
+| [I2C](/Projects/cpp/005-I2C/) | Inter-Integrated Circuit protocol with BMP280 | Done |
+| [SPI](/Projects/cpp/006-SPI/) | Serial Peripheral Interface protocol with BMP280| Done | 
 
 
 
