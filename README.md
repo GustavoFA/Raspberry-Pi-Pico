@@ -126,7 +126,8 @@ picocom -b 115200 /dev/ttyACM0
 | [ADC](/Projects/cpp/003-ADC/) | Analog to Digital converter | Done |
 | [PWM](/Projects/cpp/004-PWM/) | Pulse Width Modulation | Done |
 | [I2C](/Projects/cpp/005-I2C/) | Inter-Integrated Circuit protocol with BMP280 | Done |
-| [SPI](/Projects/cpp/006-SPI/) | Serial Peripheral Interface protocol with BMP280| Done | 
+| [SPI](/Projects/cpp/006-SPI/) | Serial Peripheral Interface protocol with BMP280| Done |
+| [UART](/Projects/cpp/007-UART/) | Universal Asynchronous Receiver-Transmitter | Done | 
 
 
 
