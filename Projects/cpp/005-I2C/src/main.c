@@ -21,9 +21,14 @@
 
 // ================= I2C SCAN and configuration ==============
 
+
+// pointer to I2C1 
 i2c_inst_t *I2C_PORT = i2c1;
+// I2C1 gpios
 const uint SDA = 26;
 const uint SCL = 27;
+// Clock frequency (SCL)
+// Standard-mode of 100kHz and Fast-mode at most 400kHz (Hz = bit/s)
 const uint BAUDRATE = 400 * 1000; // 400kHz
 
 // I2C reserves some addresses for special purposes. We exclude these from the scan.
@@ -32,9 +37,10 @@ bool reserved_addr(uint8_t addr) {
     return (addr & 0x78) == 0 || (addr & 0x78) == 0x78;
 }
 
+// Max address to scan
 const uint8_t MAX_ADDRESS = 10;
 
-// Scanning method
+// I2C Scanning method - loop through all 128 possible 7-bit I2C address
 int i2c_scan (uint8_t *addrs, int max_addrs) {
 
     int addr_count = 0;
@@ -46,6 +52,8 @@ int i2c_scan (uint8_t *addrs, int max_addrs) {
         int ret; 
         
         if (!reserved_addr(addr)) {
+            // int i2c_read_blocking (i2c_inst_t * i2c, uint8_t addr, uint8_t * dst, size_t len, bool nostop)
+            // It returns the number of bytes read, or PICO_ERROR_GENERIC if address not acknowledged, no device present, or PICO_ERROR_TIMEOUT if a timeout occurred.
             ret = i2c_read_blocking(I2C_PORT, addr, &rxdata, 1, false);
             if (ret >= 0) {
                 printf("\nFound device at 0x%02X\n", addr);
@@ -68,32 +76,38 @@ int i2c_scan (uint8_t *addrs, int max_addrs) {
     return addr_count;
 }
 
-// I2C configuration
+// I2C configuration - setup I2C hardware, dedicated gpios, and pull-up resistors
 static void i2c_config (i2c_inst_t *port, uint sda, uint scl, uint baudrate) {
+    
+    // Setup the I2C hardware peripheral
     i2c_init(port, baudrate);
+
+    // Configure GPIO to the I2C function
     gpio_set_function(sda, GPIO_FUNC_I2C);
     gpio_set_function(scl, GPIO_FUNC_I2C);
+
+    // Enable pull up resistors
     gpio_pull_up(sda);
     gpio_pull_up(scl);
 }
 
 // ====================== BMP280 ======================
 
+// REGISTER ADDRESS
+
 const uint8_t BMP280_ADDR       =   0x77;
 const uint8_t BMP280_CHIP_ID    =   0xD0;
 const uint8_t BMP280_RESET      =   0xE0;
 const uint8_t BMP280_CTRL_MEAS  =   0xF4;
 const uint8_t BMP280_CONFIG     =   0xF5;
-
 // Calibration address
 const uint8_t BMP280_CALIB      =   0x88; // 0x88 -> 0xA1
-
 // Pressure address 
-const uint8_t BMP280_PRES       =   0xF7;
+const uint8_t BMP280_PRES       =   0xF7; // 0xF7 - 0xF9
 // Temperature address
-const uint8_t BMP280_TEMP       =   0xFA;
+const uint8_t BMP280_TEMP       =   0xFA; // 0xFA - 0xFC
 
-// 
+// Chip ID check 
 uint8_t bmp280_read_chip_id () {
 
     uint8_t reg = BMP280_CHIP_ID;
@@ -107,9 +121,8 @@ uint8_t bmp280_read_chip_id () {
     return id;
 }
 
-// 
-
-// Calibration coefficients (from datasheet, signedness matters!)
+// Calibration coefficients 
+// (datasheet - table 17)
 uint16_t dig_T1;
 int16_t  dig_T2;
 int16_t  dig_T3;
@@ -124,11 +137,14 @@ int16_t  dig_P7;
 int16_t  dig_P8;
 int16_t  dig_P9;
 
+// Get the compensation parameters
 void bmp280_read_calibration() {
-    uint8_t reg = 0x88;
+    uint8_t reg = BMP280_CALIB;
     uint8_t buf[24];
 
+    // 
     i2c_write_blocking(I2C_PORT, BMP280_ADDR, &reg, 1, true);
+    //     
     i2c_read_blocking(I2C_PORT, BMP280_ADDR, buf, 24, false);
 
     // Little-endian (LSB first)
@@ -147,22 +163,25 @@ void bmp280_read_calibration() {
     dig_P9 = (int16_t)(buf[23] << 8 | buf[22]);
 }
 
-//
+// BMP280 sensor configuration 
 void bmp280_configure() {
     uint8_t buf[2];
 
-    // CTRL_MEAS (0xF4): temp oversampling x1, pressure oversampling x1, normal mode
-    buf[0] = 0xF4;
+    // CTRL_MEAS (0xF4): temp oversampling x1, pressure oversampling x1, normal mode 
+    // (datasheet - table 20)
+    buf[0] = BMP280_CTRL_MEAS;
     buf[1] = 0x27; // 0b001 001 11 -> osrs_t=1, osrs_p=1, mode=normal
     i2c_write_blocking(I2C_PORT, BMP280_ADDR, buf, 2, false);
 
     // CONFIG (0xF5): standby 0.5ms, filter off
-    buf[0] = 0xF5;
+    // (datasheet - table 23)
+    buf[0] = BMP280_CONFIG;
     buf[1] = 0x00;
     i2c_write_blocking(I2C_PORT, BMP280_ADDR, buf, 2, false);
 }
 
-//
+// Read BMP280 raw data
+// (datasheet - table 24 and 25)
 void bmp280_read_raw (int32_t *raw_temp, int32_t *raw_press) {
 
     uint8_t buf[6];
@@ -171,7 +190,10 @@ void bmp280_read_raw (int32_t *raw_temp, int32_t *raw_press) {
 
     i2c_read_blocking(I2C_PORT, BMP280_ADDR, buf, 6, false);
 
+    // The data are read out in an unsigned 20-bit format both for pressure and for temperature
+    // (datasheet - 3.9)
     // Big-ending (MSB first)
+    // 0/3- MSB | 1/4 - LSB | 2/5 - XLSB
     *raw_press = (int32_t)((buf[0] << 12) | (buf[1] << 4) | (buf[2] >> 4));
     *raw_temp  = (int32_t)((buf[3] << 12) | (buf[4] << 4) | (buf[5] >> 4));
 
@@ -221,6 +243,8 @@ uint32_t bmp280_compensate_pressure(int32_t adc_P) {
 
     return (uint32_t)p;
 }
+
+// BMP280 loop read function
 
 int32_t raw_temp, raw_press;
 int32_t temp, press;
